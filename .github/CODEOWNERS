@@ -1,0 +1,24 @@
+# BlackRoad OS, Inc. — Code Owners
+# These owners will be automatically requested for review on PRs.
+
+# Default owner for everything
+* @BlackRoad-OS/core
+
+# Workflows and CI/CD
+.github/ @BlackRoad-OS/core
+
+# Security-sensitive files
+SECURITY.md @BlackRoad-OS/core
+LICENSE @BlackRoad-OS/core
+
+# Infrastructure
+workers/ @BlackRoad-OS/core
+vercel.json @BlackRoad-OS/core
+railway.json @BlackRoad-OS/core
+
+# Database
+src/db/ @BlackRoad-OS/core
+drizzle/ @BlackRoad-OS/core
+
+# Billing
+src/stripe/ @BlackRoad-OS/core

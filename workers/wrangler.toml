@@ -1,0 +1,35 @@
+name = "blackroad-ai-worker"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+
+[triggers]
+crons = ["0 */6 * * *"]
+
+[[queues.producers]]
+queue = "ai-processing-queue"
+binding = "AI_QUEUE"
+
+[[queues.consumers]]
+queue = "ai-processing-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "ai-processing-dlq"
+
+[vars]
+ENVIRONMENT = "production"
+
+[env.staging]
+name = "blackroad-ai-worker-staging"
+vars = { ENVIRONMENT = "staging" }
+
+[env.production]
+name = "blackroad-ai-worker"
+vars = { ENVIRONMENT = "production" }
+routes = [
+  { pattern = "ai-worker.blackroad.io/*", zone_name = "blackroad.io" }
+]
