@@ -1,5 +1,7 @@
 # BlackRoad AI - Kanban Project System
 
+[![CI](https://github.com/BlackRoad-OS/ai/actions/workflows/ci.yml/badge.svg)](https://github.com/BlackRoad-OS/ai/actions/workflows/ci.yml)
+
 Artificial intelligence models, agents, and intelligence layers for the BlackRoad system.
 
 Salesforce-style project management with multi-service synchronization, SHA-256/SHA-infinity hashing, and comprehensive API integrations.

@@ -15,19 +15,19 @@ from .todos import (
     todo,
     done,
     todos,
-    summary
+    summary,
 )
 
 __all__ = [
-    'TaskStatus',
-    'TaskPriority',
-    'TaskStep',
-    'AgentTask',
-    'AgentSession',
-    'TodoManager',
-    'get_manager',
-    'todo',
-    'done',
-    'todos',
-    'summary'
+    "TaskStatus",
+    "TaskPriority",
+    "TaskStep",
+    "AgentTask",
+    "AgentSession",
+    "TodoManager",
+    "get_manager",
+    "todo",
+    "done",
+    "todos",
+    "summary",
 ]

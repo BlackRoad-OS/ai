@@ -23,6 +23,7 @@ class EndpointMethod(Enum):
 @dataclass
 class Endpoint:
     """API endpoint definition."""
+
     path: str
     method: EndpointMethod
     handler: str
@@ -77,19 +78,45 @@ class KanbanEndpoints:
 
     # Webhook endpoints (incoming)
     WEBHOOK_ENDPOINTS = [
-        Endpoint("/api/v1/webhooks/cloudflare", EndpointMethod.POST, "webhook_cloudflare", "Cloudflare webhook", auth_required=False),
-        Endpoint("/api/v1/webhooks/salesforce", EndpointMethod.POST, "webhook_salesforce", "Salesforce webhook", auth_required=False),
-        Endpoint("/api/v1/webhooks/github", EndpointMethod.POST, "webhook_github", "GitHub webhook", auth_required=False),
-        Endpoint("/api/v1/webhooks/vercel", EndpointMethod.POST, "webhook_vercel", "Vercel webhook", auth_required=False),
-        Endpoint("/api/v1/webhooks/digitalocean", EndpointMethod.POST, "webhook_digitalocean", "DigitalOcean webhook", auth_required=False),
-        Endpoint("/api/v1/webhooks/claude", EndpointMethod.POST, "webhook_claude", "Claude API callback", auth_required=False),
+        Endpoint(
+            "/api/v1/webhooks/cloudflare",
+            EndpointMethod.POST,
+            "webhook_cloudflare",
+            "Cloudflare webhook",
+            auth_required=False,
+        ),
+        Endpoint(
+            "/api/v1/webhooks/salesforce",
+            EndpointMethod.POST,
+            "webhook_salesforce",
+            "Salesforce webhook",
+            auth_required=False,
+        ),
+        Endpoint(
+            "/api/v1/webhooks/github", EndpointMethod.POST, "webhook_github", "GitHub webhook", auth_required=False
+        ),
+        Endpoint(
+            "/api/v1/webhooks/vercel", EndpointMethod.POST, "webhook_vercel", "Vercel webhook", auth_required=False
+        ),
+        Endpoint(
+            "/api/v1/webhooks/digitalocean",
+            EndpointMethod.POST,
+            "webhook_digitalocean",
+            "DigitalOcean webhook",
+            auth_required=False,
+        ),
+        Endpoint(
+            "/api/v1/webhooks/claude", EndpointMethod.POST, "webhook_claude", "Claude API callback", auth_required=False
+        ),
     ]
 
     # Agent endpoints
     AGENT_ENDPOINTS = [
         Endpoint("/api/v1/agents/tasks", EndpointMethod.GET, "list_agent_tasks", "List agent tasks"),
         Endpoint("/api/v1/agents/tasks", EndpointMethod.POST, "create_agent_task", "Create agent task"),
-        Endpoint("/api/v1/agents/tasks/{task_id}/status", EndpointMethod.PATCH, "update_task_status", "Update task status"),
+        Endpoint(
+            "/api/v1/agents/tasks/{task_id}/status", EndpointMethod.PATCH, "update_task_status", "Update task status"
+        ),
         Endpoint("/api/v1/agents/instructions", EndpointMethod.GET, "get_instructions", "Get agent instructions"),
     ]
 
@@ -104,12 +131,12 @@ class KanbanEndpoints:
     def get_all_endpoints(cls) -> List[Endpoint]:
         """Get all defined endpoints."""
         return (
-            cls.BOARD_ENDPOINTS +
-            cls.CARD_ENDPOINTS +
-            cls.SYNC_ENDPOINTS +
-            cls.WEBHOOK_ENDPOINTS +
-            cls.AGENT_ENDPOINTS +
-            cls.HASH_ENDPOINTS
+            cls.BOARD_ENDPOINTS
+            + cls.CARD_ENDPOINTS
+            + cls.SYNC_ENDPOINTS
+            + cls.WEBHOOK_ENDPOINTS
+            + cls.AGENT_ENDPOINTS
+            + cls.HASH_ENDPOINTS
         )
 
     @classmethod
@@ -128,8 +155,8 @@ class KanbanEndpoints:
                     "200": {"description": "Success"},
                     "400": {"description": "Bad Request"},
                     "401": {"description": "Unauthorized"},
-                    "500": {"description": "Server Error"}
-                }
+                    "500": {"description": "Server Error"},
+                },
             }
 
         return {
@@ -137,21 +164,14 @@ class KanbanEndpoints:
             "info": {
                 "title": "BlackRoad Kanban API",
                 "version": "1.0.0",
-                "description": "Kanban board API with multi-service sync"
+                "description": "Kanban board API with multi-service sync",
             },
             "servers": [
                 {"url": "https://api.blackroad.ai", "description": "Production"},
-                {"url": "http://localhost:8000", "description": "Development"}
+                {"url": "http://localhost:8000", "description": "Development"},
             ],
             "paths": paths,
-            "components": {
-                "securitySchemes": {
-                    "bearerAuth": {
-                        "type": "http",
-                        "scheme": "bearer"
-                    }
-                }
-            }
+            "components": {"securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer"}}},
         }
 
 
@@ -177,18 +197,18 @@ class EndpointRouter:
         # Apply middleware
         for mw in self.middleware:
             request = await mw(request)
-            if request.get('_abort'):
-                return request.get('_response', {'error': 'Request aborted'})
+            if request.get("_abort"):
+                return request.get("_response", {"error": "Request aborted"})
 
         # Find matching route
         handler = self._find_handler(path, method)
         if not handler:
-            return {'error': 'Not found', 'status': 404}
+            return {"error": "Not found", "status": 404}
 
         try:
             return await handler(request)
         except Exception as e:
-            return {'error': str(e), 'status': 500}
+            return {"error": str(e), "status": 500}
 
     def _find_handler(self, path: str, method: str) -> Optional[callable]:
         """Find handler for path (supports path parameters)."""
@@ -206,14 +226,14 @@ class EndpointRouter:
 
     def _match_path(self, pattern: str, path: str) -> bool:
         """Check if path matches pattern with parameters."""
-        pattern_parts = pattern.split('/')
-        path_parts = path.split('/')
+        pattern_parts = pattern.split("/")
+        path_parts = path.split("/")
 
         if len(pattern_parts) != len(path_parts):
             return False
 
         for p, pp in zip(pattern_parts, path_parts):
-            if p.startswith('{') and p.endswith('}'):
+            if p.startswith("{") and p.endswith("}"):
                 continue  # Parameter placeholder
             if p != pp:
                 return False
@@ -227,37 +247,33 @@ SERVICE_ENDPOINTS = {
         "base_url": "https://api.cloudflare.com/client/v4",
         "kv_namespace": "/accounts/{account_id}/storage/kv/namespaces/{namespace_id}",
         "workers": "/accounts/{account_id}/workers/scripts/{script_name}",
-        "d1": "/accounts/{account_id}/d1/database/{database_id}"
+        "d1": "/accounts/{account_id}/d1/database/{database_id}",
     },
     "salesforce": {
         "base_url": "https://{instance}.salesforce.com",
         "rest": "/services/data/v{version}",
         "sobjects": "/services/data/v{version}/sobjects",
         "query": "/services/data/v{version}/query",
-        "composite": "/services/data/v{version}/composite"
+        "composite": "/services/data/v{version}/composite",
     },
     "vercel": {
         "base_url": "https://api.vercel.com",
         "deployments": "/v13/deployments",
         "projects": "/v9/projects",
-        "env": "/v10/projects/{project_id}/env"
+        "env": "/v10/projects/{project_id}/env",
     },
     "digitalocean": {
         "base_url": "https://api.digitalocean.com/v2",
         "droplets": "/droplets",
         "functions": "/functions/namespaces/{namespace_id}/functions",
-        "spaces": "https://{region}.digitaloceanspaces.com"
+        "spaces": "https://{region}.digitaloceanspaces.com",
     },
-    "claude": {
-        "base_url": "https://api.anthropic.com",
-        "messages": "/v1/messages",
-        "completions": "/v1/complete"
-    },
+    "claude": {"base_url": "https://api.anthropic.com", "messages": "/v1/messages", "completions": "/v1/complete"},
     "github": {
         "base_url": "https://api.github.com",
         "repos": "/repos/{owner}/{repo}",
         "issues": "/repos/{owner}/{repo}/issues",
         "projects": "/repos/{owner}/{repo}/projects",
-        "actions": "/repos/{owner}/{repo}/actions"
-    }
+        "actions": "/repos/{owner}/{repo}/actions",
+    },
 }

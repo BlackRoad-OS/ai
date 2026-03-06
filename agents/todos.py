@@ -19,7 +19,7 @@ from datetime import datetime
 import uuid
 import sys
 
-sys.path.insert(0, '/home/user/ai')
+sys.path.insert(0, "/home/user/ai")
 from utils.hashing import sha256_hash, sha_infinity_hash, create_integrity_proof
 
 
@@ -42,6 +42,7 @@ class TaskPriority(Enum):
 @dataclass
 class TaskStep:
     """Individual step within a task."""
+
     id: str
     description: str
     status: TaskStatus = TaskStatus.PENDING
@@ -68,6 +69,7 @@ class TaskStep:
 @dataclass
 class AgentTask:
     """Task for an AI agent to complete."""
+
     id: str
     title: str
     description: str = ""
@@ -123,22 +125,19 @@ class AgentTask:
 
     def add_step(self, description: str) -> TaskStep:
         """Add a step to the task."""
-        step = TaskStep(
-            id=f"step-{len(self.steps)+1}",
-            description=description
-        )
+        step = TaskStep(id=f"step-{len(self.steps)+1}", description=description)
         self.steps.append(step)
         return step
 
     def checkpoint(self, message: str, data: Dict = None):
         """Create a checkpoint."""
         checkpoint = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'message': message,
-            'steps_completed': sum(1 for s in self.steps if s.status == TaskStatus.COMPLETED),
-            'steps_total': len(self.steps),
-            'data': data or {},
-            'hash': sha256_hash(f"{self.id}:{message}:{time.time()}")
+            "timestamp": datetime.utcnow().isoformat(),
+            "message": message,
+            "steps_completed": sum(1 for s in self.steps if s.status == TaskStatus.COMPLETED),
+            "steps_total": len(self.steps),
+            "data": data or {},
+            "hash": sha256_hash(f"{self.id}:{message}:{time.time()}"),
         }
         self.checkpoints.append(checkpoint)
         return checkpoint
@@ -162,26 +161,27 @@ class AgentTask:
     def to_dict(self) -> Dict:
         """Convert to dictionary."""
         return {
-            'id': self.id,
-            'title': self.title,
-            'description': self.description,
-            'status': self.status.value,
-            'priority': self.priority.value,
-            'steps': [asdict(s) for s in self.steps],
-            'created_at': self.created_at,
-            'started_at': self.started_at,
-            'completed_at': self.completed_at,
-            'blockers': self.blockers,
-            'metadata': self.metadata,
-            'checkpoints': self.checkpoints,
-            'hash': self.hash,
-            'progress': self.progress
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status.value,
+            "priority": self.priority.value,
+            "steps": [asdict(s) for s in self.steps],
+            "created_at": self.created_at,
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "blockers": self.blockers,
+            "metadata": self.metadata,
+            "checkpoints": self.checkpoints,
+            "hash": self.hash,
+            "progress": self.progress,
         }
 
 
 @dataclass
 class AgentSession:
     """Tracks an agent's work session."""
+
     id: str
     agent_type: str  # 'claude', 'gpt', 'custom'
     tasks: List[AgentTask] = field(default_factory=list)
@@ -189,19 +189,9 @@ class AgentSession:
     ended_at: Optional[str] = None
     context: Dict[str, Any] = field(default_factory=dict)
 
-    def create_task(
-        self,
-        title: str,
-        description: str = "",
-        priority: TaskPriority = TaskPriority.MEDIUM
-    ) -> AgentTask:
+    def create_task(self, title: str, description: str = "", priority: TaskPriority = TaskPriority.MEDIUM) -> AgentTask:
         """Create and add a new task."""
-        task = AgentTask(
-            id=f"task-{uuid.uuid4().hex[:8]}",
-            title=title,
-            description=description,
-            priority=priority
-        )
+        task = AgentTask(id=f"task-{uuid.uuid4().hex[:8]}", title=title, description=description, priority=priority)
         self.tasks.append(task)
         return task
 
@@ -227,17 +217,17 @@ class AgentSession:
     def get_summary(self) -> Dict:
         """Get session summary."""
         return {
-            'session_id': self.id,
-            'agent_type': self.agent_type,
-            'duration': self._calculate_duration(),
-            'tasks': {
-                'total': len(self.tasks),
-                'completed': sum(1 for t in self.tasks if t.status == TaskStatus.COMPLETED),
-                'failed': sum(1 for t in self.tasks if t.status == TaskStatus.FAILED),
-                'blocked': sum(1 for t in self.tasks if t.status == TaskStatus.BLOCKED),
-                'in_progress': sum(1 for t in self.tasks if t.status == TaskStatus.IN_PROGRESS)
+            "session_id": self.id,
+            "agent_type": self.agent_type,
+            "duration": self._calculate_duration(),
+            "tasks": {
+                "total": len(self.tasks),
+                "completed": sum(1 for t in self.tasks if t.status == TaskStatus.COMPLETED),
+                "failed": sum(1 for t in self.tasks if t.status == TaskStatus.FAILED),
+                "blocked": sum(1 for t in self.tasks if t.status == TaskStatus.BLOCKED),
+                "in_progress": sum(1 for t in self.tasks if t.status == TaskStatus.IN_PROGRESS),
             },
-            'integrity_hash': sha_infinity_hash([t.to_dict() for t in self.tasks])
+            "integrity_hash": sha_infinity_hash([t.to_dict() for t in self.tasks]),
         }
 
     def _calculate_duration(self) -> Optional[float]:
@@ -259,10 +249,7 @@ class TodoManager:
 
     def create_session(self, agent_type: str = "claude") -> AgentSession:
         """Create a new agent session."""
-        session = AgentSession(
-            id=f"session-{uuid.uuid4().hex[:8]}",
-            agent_type=agent_type
-        )
+        session = AgentSession(id=f"session-{uuid.uuid4().hex[:8]}", agent_type=agent_type)
         self.sessions[session.id] = session
         self._current_session = session.id
         return session
@@ -273,12 +260,7 @@ class TodoManager:
             return self.sessions.get(self._current_session)
         return None
 
-    def add_todo(
-        self,
-        title: str,
-        description: str = "",
-        priority: TaskPriority = TaskPriority.MEDIUM
-    ) -> AgentTask:
+    def add_todo(self, title: str, description: str = "", priority: TaskPriority = TaskPriority.MEDIUM) -> AgentTask:
         """Add a todo to current session."""
         session = self.get_current_session()
         if not session:
@@ -299,33 +281,34 @@ class TodoManager:
         """Save all sessions to file."""
         filepath = filepath or f"{self.storage_path}/sessions.json"
         data = {
-            'sessions': {
+            "sessions": {
                 sid: {
-                    'id': s.id,
-                    'agent_type': s.agent_type,
-                    'tasks': [t.to_dict() for t in s.tasks],
-                    'started_at': s.started_at,
-                    'ended_at': s.ended_at,
-                    'context': s.context
+                    "id": s.id,
+                    "agent_type": s.agent_type,
+                    "tasks": [t.to_dict() for t in s.tasks],
+                    "started_at": s.started_at,
+                    "ended_at": s.ended_at,
+                    "context": s.context,
                 }
                 for sid, s in self.sessions.items()
             },
-            'current_session': self._current_session
+            "current_session": self._current_session,
         }
         import os
+
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
 
     @classmethod
-    def load(cls, filepath: str) -> 'TodoManager':
+    def load(cls, filepath: str) -> "TodoManager":
         """Load sessions from file."""
         manager = cls()
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 data = json.load(f)
             # Reconstruct sessions
-            manager._current_session = data.get('current_session')
+            manager._current_session = data.get("current_session")
             # Note: Full reconstruction would need more work
         except FileNotFoundError:
             pass

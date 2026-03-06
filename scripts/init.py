@@ -35,12 +35,12 @@ def print_header():
 def create_directories():
     """Create required directories."""
     dirs = [
-        'data/boards',
-        'data/agents',
-        'data/sync',
-        'logs',
-        '.kanban/boards',
-        '.kanban/config',
+        "data/boards",
+        "data/agents",
+        "data/sync",
+        "logs",
+        ".kanban/boards",
+        ".kanban/config",
     ]
 
     print("Creating directories...")
@@ -59,9 +59,7 @@ def create_default_board():
     from kanban.board import KanbanBoard, KanbanCard, CardStatus, Priority
 
     board = KanbanBoard(
-        id="board-default",
-        name="Main Project Board",
-        description="Default kanban board for project management"
+        id="board-default", name="Main Project Board", description="Default kanban board for project management"
     )
 
     # Add sample cards
@@ -72,7 +70,7 @@ def create_default_board():
             description="Configure all services and integrations",
             status=CardStatus.DONE,
             priority=Priority.HIGH,
-            labels=["setup", "infrastructure"]
+            labels=["setup", "infrastructure"],
         ),
         KanbanCard(
             id="card-002",
@@ -80,7 +78,7 @@ def create_default_board():
             description="Build REST API for board operations",
             status=CardStatus.IN_PROGRESS,
             priority=Priority.HIGH,
-            labels=["api", "feature"]
+            labels=["api", "feature"],
         ),
         KanbanCard(
             id="card-003",
@@ -88,7 +86,7 @@ def create_default_board():
             description="Write tests for all integrations",
             status=CardStatus.TODO,
             priority=Priority.MEDIUM,
-            labels=["testing"]
+            labels=["testing"],
         ),
         KanbanCard(
             id="card-004",
@@ -96,7 +94,7 @@ def create_default_board():
             description="Write comprehensive documentation",
             status=CardStatus.BACKLOG,
             priority=Priority.LOW,
-            labels=["docs"]
+            labels=["docs"],
         ),
     ]
 
@@ -106,7 +104,7 @@ def create_default_board():
             col.cards.append(card)
 
     # Save board
-    board_path = PROJECT_ROOT / 'data/boards/default.json'
+    board_path = PROJECT_ROOT / "data/boards/default.json"
     board.save(str(board_path))
 
     print(f"  Created: {board_path}")
@@ -125,7 +123,7 @@ def verify_hashing():
         sha_infinity_hash,
         ContentVerifier,
         create_integrity_proof,
-        verify_integrity_proof
+        verify_integrity_proof,
     )
 
     # Test SHA-256
@@ -150,13 +148,13 @@ def verify_integrations():
     print("Verifying integrations...")
 
     integrations = [
-        ('Cloudflare', 'integrations.cloudflare.client'),
-        ('Salesforce', 'integrations.salesforce.client'),
-        ('Vercel', 'integrations.vercel.client'),
-        ('DigitalOcean', 'integrations.digitalocean.client'),
-        ('Claude', 'integrations.claude.client'),
-        ('GitHub', 'integrations.github.client'),
-        ('Mobile', 'integrations.mobile.clients'),
+        ("Cloudflare", "integrations.cloudflare.client"),
+        ("Salesforce", "integrations.salesforce.client"),
+        ("Vercel", "integrations.vercel.client"),
+        ("DigitalOcean", "integrations.digitalocean.client"),
+        ("Claude", "integrations.claude.client"),
+        ("GitHub", "integrations.github.client"),
+        ("Mobile", "integrations.mobile.clients"),
     ]
 
     for name, module in integrations:
@@ -171,8 +169,8 @@ def verify_integrations():
 
 def create_env_file():
     """Create .env file from template if it doesn't exist."""
-    env_path = PROJECT_ROOT / '.env'
-    template_path = PROJECT_ROOT / 'config/.env.example'
+    env_path = PROJECT_ROOT / ".env"
+    template_path = PROJECT_ROOT / "config/.env.example"
 
     if env_path.exists():
         print(".env file already exists, skipping...\n")
@@ -180,6 +178,7 @@ def create_env_file():
 
     if template_path.exists():
         import shutil
+
         shutil.copy(template_path, env_path)
         print(f"Created .env from template")
         print("  Please edit .env with your API keys and settings\n")
@@ -233,7 +232,7 @@ def verify_setup():
 
     # Check directories
     print("Checking directories...")
-    required_dirs = ['data/boards', 'data/agents', 'config']
+    required_dirs = ["data/boards", "data/agents", "config"]
     for d in required_dirs:
         path = PROJECT_ROOT / d
         status = "OK" if path.exists() else "MISSING"
@@ -246,9 +245,10 @@ def verify_setup():
     verify_hashing()
 
     # Check board
-    board_path = PROJECT_ROOT / 'data/boards/default.json'
+    board_path = PROJECT_ROOT / "data/boards/default.json"
     if board_path.exists():
         from kanban.board import KanbanBoard
+
         board = KanbanBoard.load(str(board_path))
         print(f"Default board loaded: {board.name}")
         print(f"  Cards: {len(board.get_all_cards())}")
@@ -259,9 +259,9 @@ def verify_setup():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Initialize BlackRoad Kanban System')
-    parser.add_argument('--quick', action='store_true', help='Quick setup with defaults')
-    parser.add_argument('--verify', action='store_true', help='Verify existing setup')
+    parser = argparse.ArgumentParser(description="Initialize BlackRoad Kanban System")
+    parser.add_argument("--quick", action="store_true", help="Quick setup with defaults")
+    parser.add_argument("--verify", action="store_true", help="Verify existing setup")
     args = parser.parse_args()
 
     if args.verify:
@@ -279,5 +279,5 @@ def main():
     show_summary(board)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

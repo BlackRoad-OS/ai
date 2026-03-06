@@ -39,6 +39,7 @@ class Priority(Enum):
 @dataclass
 class KanbanCard:
     """Individual card/task in the kanban board."""
+
     id: str
     title: str
     description: str = ""
@@ -64,26 +65,28 @@ class KanbanCard:
     def update_hashes(self):
         """Update SHA-256 and SHA-infinity hashes."""
         from utils.hashing import sha256_hash, sha_infinity_hash
+
         content = f"{self.id}:{self.title}:{self.description}:{self.status.value}"
         self.sha256_hash = sha256_hash(content)
         self.sha_infinity_hash = sha_infinity_hash(content)
 
     def to_dict(self) -> Dict:
         data = asdict(self)
-        data['status'] = self.status.value
-        data['priority'] = self.priority.value
+        data["status"] = self.status.value
+        data["priority"] = self.priority.value
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict) -> 'KanbanCard':
-        data['status'] = CardStatus(data['status'])
-        data['priority'] = Priority(data['priority'])
+    def from_dict(cls, data: Dict) -> "KanbanCard":
+        data["status"] = CardStatus(data["status"])
+        data["priority"] = Priority(data["priority"])
         return cls(**data)
 
 
 @dataclass
 class KanbanColumn:
     """Column in the kanban board."""
+
     id: str
     name: str
     status: CardStatus
@@ -107,6 +110,7 @@ class KanbanColumn:
 @dataclass
 class KanbanBoard:
     """Main kanban board with Salesforce-style project management."""
+
     id: str
     name: str
     description: str = ""
@@ -166,55 +170,55 @@ class KanbanBoard:
 
     def to_dict(self) -> Dict:
         return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'columns': [
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "columns": [
                 {
-                    'id': col.id,
-                    'name': col.name,
-                    'status': col.status.value,
-                    'wip_limit': col.wip_limit,
-                    'cards': [card.to_dict() for card in col.cards]
+                    "id": col.id,
+                    "name": col.name,
+                    "status": col.status.value,
+                    "wip_limit": col.wip_limit,
+                    "cards": [card.to_dict() for card in col.cards],
                 }
                 for col in self.columns
             ],
-            'created_at': self.created_at,
-            'updated_at': self.updated_at,
-            'last_sync': self.last_sync,
-            'sync_enabled': self.sync_enabled
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "last_sync": self.last_sync,
+            "sync_enabled": self.sync_enabled,
         }
 
     def save(self, filepath: str):
         """Save board state to JSON file."""
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, filepath: str) -> 'KanbanBoard':
+    def load(cls, filepath: str) -> "KanbanBoard":
         """Load board state from JSON file."""
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             data = json.load(f)
 
         board = cls(
-            id=data['id'],
-            name=data['name'],
-            description=data.get('description', ''),
-            created_at=data.get('created_at'),
-            updated_at=data.get('updated_at'),
-            last_sync=data.get('last_sync', {}),
-            sync_enabled=data.get('sync_enabled', {})
+            id=data["id"],
+            name=data["name"],
+            description=data.get("description", ""),
+            created_at=data.get("created_at"),
+            updated_at=data.get("updated_at"),
+            last_sync=data.get("last_sync", {}),
+            sync_enabled=data.get("sync_enabled", {}),
         )
 
         board.columns = []
-        for col_data in data['columns']:
+        for col_data in data["columns"]:
             col = KanbanColumn(
-                id=col_data['id'],
-                name=col_data['name'],
-                status=CardStatus(col_data['status']),
-                wip_limit=col_data.get('wip_limit')
+                id=col_data["id"],
+                name=col_data["name"],
+                status=CardStatus(col_data["status"]),
+                wip_limit=col_data.get("wip_limit"),
             )
-            for card_data in col_data.get('cards', []):
+            for card_data in col_data.get("cards", []):
                 col.cards.append(KanbanCard.from_dict(card_data))
             board.columns.append(col)
 
@@ -236,6 +240,7 @@ class BoardManager:
     def create_board(self, name: str, description: str = "") -> KanbanBoard:
         """Create a new kanban board."""
         import uuid
+
         board_id = f"board-{uuid.uuid4().hex[:8]}"
         board = KanbanBoard(id=board_id, name=name, description=description)
         self.boards[board_id] = board

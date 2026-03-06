@@ -11,37 +11,24 @@ Features:
 - Agent task management
 """
 
-from .board import (
-    CardStatus,
-    Priority,
-    KanbanCard,
-    KanbanColumn,
-    KanbanBoard,
-    BoardManager
-)
+from .board import CardStatus, Priority, KanbanCard, KanbanColumn, KanbanBoard, BoardManager
 
-from .endpoints import (
-    EndpointMethod,
-    Endpoint,
-    KanbanEndpoints,
-    EndpointRouter,
-    SERVICE_ENDPOINTS
-)
+from .endpoints import EndpointMethod, Endpoint, KanbanEndpoints, EndpointRouter, SERVICE_ENDPOINTS
 
 __all__ = [
     # Board classes
-    'CardStatus',
-    'Priority',
-    'KanbanCard',
-    'KanbanColumn',
-    'KanbanBoard',
-    'BoardManager',
+    "CardStatus",
+    "Priority",
+    "KanbanCard",
+    "KanbanColumn",
+    "KanbanBoard",
+    "BoardManager",
     # Endpoint classes
-    'EndpointMethod',
-    'Endpoint',
-    'KanbanEndpoints',
-    'EndpointRouter',
-    'SERVICE_ENDPOINTS'
+    "EndpointMethod",
+    "Endpoint",
+    "KanbanEndpoints",
+    "EndpointRouter",
+    "SERVICE_ENDPOINTS",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

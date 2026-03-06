@@ -15,6 +15,7 @@ import json
 @dataclass
 class IntegrationConfig:
     """Configuration for service integration."""
+
     name: str
     base_url: str
     api_key: Optional[str] = None
@@ -39,16 +40,12 @@ class BaseIntegration(ABC):
     async def get_session(self) -> aiohttp.ClientSession:
         """Get or create HTTP session."""
         if self._session is None or self._session.closed:
-            headers = {
-                'Content-Type': 'application/json',
-                **self.config.headers
-            }
+            headers = {"Content-Type": "application/json", **self.config.headers}
             if self.config.api_key:
-                headers['Authorization'] = f'Bearer {self.config.api_key}'
+                headers["Authorization"] = f"Bearer {self.config.api_key}"
 
             self._session = aiohttp.ClientSession(
-                headers=headers,
-                timeout=aiohttp.ClientTimeout(total=self.config.timeout)
+                headers=headers, timeout=aiohttp.ClientTimeout(total=self.config.timeout)
             )
         return self._session
 
@@ -58,11 +55,7 @@ class BaseIntegration(ABC):
             await self._session.close()
 
     async def request(
-        self,
-        method: str,
-        endpoint: str,
-        data: Optional[Dict] = None,
-        params: Optional[Dict] = None
+        self, method: str, endpoint: str, data: Optional[Dict] = None, params: Optional[Dict] = None
     ) -> Dict:
         """Make HTTP request with retry logic."""
         session = await self.get_session()
@@ -70,20 +63,11 @@ class BaseIntegration(ABC):
 
         for attempt in range(self.config.retry_count):
             try:
-                async with session.request(
-                    method,
-                    url,
-                    json=data,
-                    params=params
-                ) as response:
+                async with session.request(method, url, json=data, params=params) as response:
                     result = await response.json()
 
                     if response.status >= 400:
-                        raise IntegrationError(
-                            f"API error: {response.status}",
-                            status=response.status,
-                            response=result
-                        )
+                        raise IntegrationError(f"API error: {response.status}", status=response.status, response=result)
 
                     return result
 
@@ -157,18 +141,13 @@ class SyncManager:
 
         for name, result in zip(self.integrations.keys(), completed):
             if isinstance(result, Exception):
-                results[name] = {'success': False, 'error': str(result)}
+                results[name] = {"success": False, "error": str(result)}
             else:
                 results[name] = result
 
         return results
 
-    async def _sync_with_lock(
-        self,
-        name: str,
-        integration: BaseIntegration,
-        board
-    ) -> Dict:
+    async def _sync_with_lock(self, name: str, integration: BaseIntegration, board) -> Dict:
         """Sync with lock to prevent concurrent syncs."""
         async with self.sync_locks[name]:
             return await integration.sync(board)
@@ -177,10 +156,7 @@ class SyncManager:
         """Check health of all services."""
         results = {}
 
-        tasks = [
-            (name, integration.health_check())
-            for name, integration in self.integrations.items()
-        ]
+        tasks = [(name, integration.health_check()) for name, integration in self.integrations.items()]
 
         for name, task in tasks:
             try:

@@ -15,18 +15,20 @@ from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 import json
 import sys
-sys.path.insert(0, '/home/user/ai')
+
+sys.path.insert(0, "/home/user/ai")
 
 from integrations.base import BaseIntegration, IntegrationConfig
-
 
 # =============================================================================
 # Termius Integration
 # =============================================================================
 
+
 @dataclass
 class TermiusConfig(IntegrationConfig):
     """Termius-specific configuration."""
+
     team_id: Optional[str] = None
     sync_enabled: bool = True
 
@@ -52,69 +54,54 @@ class TermiusIntegration(BaseIntegration):
         """Check Termius API connectivity."""
         try:
             result = await self.request("GET", "/v1/user")
-            return 'id' in result
+            return "id" in result
         except Exception:
             return False
 
     async def sync(self, board) -> Dict:
         """Sync board-related hosts and snippets."""
-        results = {'hosts': [], 'snippets': [], 'success': True}
+        results = {"hosts": [], "snippets": [], "success": True}
 
         try:
             # Store kanban-related snippets for quick commands
             snippets = self._generate_kanban_snippets(board)
             for snippet in snippets:
                 await self.create_snippet(snippet)
-                results['snippets'].append(snippet['label'])
+                results["snippets"].append(snippet["label"])
 
             self._state_cache[board.id] = board.to_dict()
 
         except Exception as e:
-            results['success'] = False
-            results['error'] = str(e)
+            results["success"] = False
+            results["error"] = str(e)
 
         return results
 
     def get_state_hash(self) -> str:
         from utils.hashing import sha256_hash
+
         return sha256_hash(self._state_cache)
 
     def _generate_kanban_snippets(self, board) -> List[Dict]:
         """Generate useful snippets from board data."""
         return [
             {
-                'label': f'kanban-status-{board.id}',
-                'snippet': f'echo "Board: {board.name} | Cards: {len(board.get_all_cards())}"'
+                "label": f"kanban-status-{board.id}",
+                "snippet": f'echo "Board: {board.name} | Cards: {len(board.get_all_cards())}"',
             },
-            {
-                'label': f'kanban-sync-{board.id}',
-                'snippet': f'curl -X POST https://api.blackroad.ai/sync/{board.id}'
-            }
+            {"label": f"kanban-sync-{board.id}", "snippet": f"curl -X POST https://api.blackroad.ai/sync/{board.id}"},
         ]
 
     # Host Management
     async def list_hosts(self) -> List[Dict]:
         """List all hosts."""
         result = await self.request("GET", "/v1/hosts")
-        return result.get('hosts', [])
+        return result.get("hosts", [])
 
-    async def create_host(
-        self,
-        label: str,
-        address: str,
-        port: int = 22,
-        username: str = None
-    ) -> Dict:
+    async def create_host(self, label: str, address: str, port: int = 22, username: str = None) -> Dict:
         """Create a new host entry."""
         result = await self.request(
-            "POST",
-            "/v1/hosts",
-            data={
-                'label': label,
-                'address': address,
-                'port': port,
-                'username': username
-            }
+            "POST", "/v1/hosts", data={"label": label, "address": address, "port": port, "username": username}
         )
         return result
 
@@ -122,7 +109,7 @@ class TermiusIntegration(BaseIntegration):
     async def list_snippets(self) -> List[Dict]:
         """List all snippets."""
         result = await self.request("GET", "/v1/snippets")
-        return result.get('snippets', [])
+        return result.get("snippets", [])
 
     async def create_snippet(self, data: Dict) -> Dict:
         """Create a new snippet."""
@@ -134,9 +121,11 @@ class TermiusIntegration(BaseIntegration):
 # Working Copy Integration
 # =============================================================================
 
+
 @dataclass
 class WorkingCopyConfig(IntegrationConfig):
     """Working Copy configuration via x-callback-url."""
+
     url_scheme: str = "working-copy"
     key: str = ""  # URL callback key
 
@@ -155,6 +144,7 @@ class WorkingCopyIntegration:
 
     def get_state_hash(self) -> str:
         from utils.hashing import sha256_hash
+
         return sha256_hash(self._state_cache)
 
     def generate_clone_url(self, repo_url: str, name: str = None) -> str:
@@ -180,14 +170,10 @@ class WorkingCopyIntegration:
             url += f"&key={self.config.key}"
         return url
 
-    def generate_commit_url(
-        self,
-        repo: str,
-        message: str,
-        files: List[str] = None
-    ) -> str:
+    def generate_commit_url(self, repo: str, message: str, files: List[str] = None) -> str:
         """Generate URL to commit changes."""
         import urllib.parse
+
         url = f"{self.config.url_scheme}://commit?repo={repo}"
         url += f"&message={urllib.parse.quote(message)}"
         if files:
@@ -203,14 +189,10 @@ class WorkingCopyIntegration:
             url += f"&key={self.config.key}"
         return url
 
-    def generate_write_url(
-        self,
-        repo: str,
-        path: str,
-        text: str
-    ) -> str:
+    def generate_write_url(self, repo: str, path: str, text: str) -> str:
         """Generate URL to write file contents."""
         import urllib.parse
+
         url = f"{self.config.url_scheme}://write?repo={repo}&path={path}"
         url += f"&text={urllib.parse.quote(text)}"
         if self.config.key:
@@ -220,26 +202,22 @@ class WorkingCopyIntegration:
     def generate_board_sync_urls(self, board, repo: str) -> Dict[str, str]:
         """Generate all URLs needed to sync board to repo."""
         import json
+
         board_json = json.dumps(board.to_dict(), indent=2)
 
         return {
-            'write_board': self.generate_write_url(
-                repo,
-                f".kanban/boards/{board.id}.json",
-                board_json
+            "write_board": self.generate_write_url(repo, f".kanban/boards/{board.id}.json", board_json),
+            "commit": self.generate_commit_url(
+                repo, f"Sync kanban board: {board.name}", [f".kanban/boards/{board.id}.json"]
             ),
-            'commit': self.generate_commit_url(
-                repo,
-                f"Sync kanban board: {board.name}",
-                [f".kanban/boards/{board.id}.json"]
-            ),
-            'push': self.generate_push_url(repo)
+            "push": self.generate_push_url(repo),
         }
 
 
 # =============================================================================
 # iSH / Shellfish Integration
 # =============================================================================
+
 
 class ShellEnvironment:
     """
@@ -256,7 +234,7 @@ class ShellEnvironment:
         board_id = board.id
 
         scripts = {
-            'status.sh': f'''#!/bin/sh
+            "status.sh": f"""#!/bin/sh
 # Kanban Board Status Script
 # Board: {board.name}
 
@@ -269,9 +247,8 @@ echo "ID: $BOARD_ID"
 echo ""
 
 curl -s "$API_URL/api/v1/boards/$BOARD_ID" | jq '.'
-''',
-
-            'sync.sh': f'''#!/bin/sh
+""",
+            "sync.sh": f"""#!/bin/sh
 # Sync Kanban Board
 # Board: {board.name}
 
@@ -285,9 +262,8 @@ curl -X POST "$API_URL/api/v1/sync/all" \\
     -d '{{"board_id": "'$BOARD_ID'"}}'
 
 echo "\\nSync complete!"
-''',
-
-            'add_card.sh': '''#!/bin/sh
+""",
+            "add_card.sh": """#!/bin/sh
 # Add Card to Kanban Board
 
 BOARD_ID="${1:-}"
@@ -307,9 +283,8 @@ curl -X POST "$API_URL/api/v1/boards/$BOARD_ID/cards" \\
         \\"title\\": \\"$TITLE\\",
         \\"description\\": \\"$DESCRIPTION\\"
     }"
-''',
-
-            'move_card.sh': '''#!/bin/sh
+""",
+            "move_card.sh": """#!/bin/sh
 # Move Card Between Columns
 
 BOARD_ID="${1:-}"
@@ -327,7 +302,7 @@ API_URL="${KANBAN_API_URL:-https://api.blackroad.ai}"
 curl -X POST "$API_URL/api/v1/boards/$BOARD_ID/cards/$CARD_ID/move" \\
     -H "Content-Type: application/json" \\
     -d "{\\"status\\": \\"$STATUS\\"}"
-'''
+""",
         }
 
         self.scripts = scripts
@@ -335,7 +310,7 @@ curl -X POST "$API_URL/api/v1/boards/$BOARD_ID/cards/$CARD_ID/move" \\
 
     def get_install_script(self) -> str:
         """Get script to install kanban tools in shell environment."""
-        return '''#!/bin/sh
+        return """#!/bin/sh
 # Install Kanban CLI Tools
 
 INSTALL_DIR="${HOME}/.kanban/bin"
@@ -355,7 +330,7 @@ echo 'export PATH="$HOME/.kanban/bin:$PATH"' >> ~/.profile
 
 echo "Kanban CLI tools installed!"
 echo "Run: source ~/.profile"
-'''
+"""
 
 
 class ISHIntegration(ShellEnvironment):
@@ -366,7 +341,7 @@ class ISHIntegration(ShellEnvironment):
 
     def get_setup_script(self) -> str:
         """Get iSH-specific setup script."""
-        return '''#!/bin/sh
+        return """#!/bin/sh
 # iSH Setup for Kanban
 
 # Install dependencies
@@ -386,7 +361,7 @@ cat > ~/.kanban/config/settings.json << 'EOF'
 EOF
 
 echo "iSH Kanban environment configured!"
-'''
+"""
 
 
 class ShellfishIntegration(ShellEnvironment):
@@ -400,7 +375,7 @@ class ShellfishIntegration(ShellEnvironment):
         return [
             f"mkdir -p /kanban/boards",
             f"put board_{board.id}.json /kanban/boards/",
-            f"chmod 644 /kanban/boards/board_{board.id}.json"
+            f"chmod 644 /kanban/boards/board_{board.id}.json",
         ]
 
 
@@ -408,9 +383,11 @@ class ShellfishIntegration(ShellEnvironment):
 # Pyto Integration
 # =============================================================================
 
+
 @dataclass
 class PytoConfig:
     """Pyto Python IDE configuration."""
+
     scripts_dir: str = "kanban_scripts"
 
 
@@ -427,6 +404,7 @@ class PytoIntegration:
 
     def get_state_hash(self) -> str:
         from utils.hashing import sha256_hash
+
         return sha256_hash(self._state_cache)
 
     def generate_kanban_module(self) -> str:

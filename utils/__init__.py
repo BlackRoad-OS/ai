@@ -13,17 +13,17 @@ from .hashing import (
     hash_card,
     hash_board,
     create_integrity_proof,
-    verify_integrity_proof
+    verify_integrity_proof,
 )
 
 __all__ = [
-    'sha256_hash',
-    'sha_infinity_hash',
-    'HashChain',
-    'ContentVerifier',
-    'StateHasher',
-    'hash_card',
-    'hash_board',
-    'create_integrity_proof',
-    'verify_integrity_proof'
+    "sha256_hash",
+    "sha_infinity_hash",
+    "HashChain",
+    "ContentVerifier",
+    "StateHasher",
+    "hash_card",
+    "hash_board",
+    "create_integrity_proof",
+    "verify_integrity_proof",
 ]

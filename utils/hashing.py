@@ -27,19 +27,16 @@ def sha256_hash(content: Union[str, bytes, Dict, List]) -> str:
         Hexadecimal hash string
     """
     if isinstance(content, dict) or isinstance(content, list):
-        content = json.dumps(content, sort_keys=True, separators=(',', ':'))
+        content = json.dumps(content, sort_keys=True, separators=(",", ":"))
 
     if isinstance(content, str):
-        content = content.encode('utf-8')
+        content = content.encode("utf-8")
 
     return hashlib.sha256(content).hexdigest()
 
 
 def sha_infinity_hash(
-    content: Union[str, bytes, Dict, List],
-    depth: int = 7,
-    include_timestamp: bool = True,
-    salt: Optional[str] = None
+    content: Union[str, bytes, Dict, List], depth: int = 7, include_timestamp: bool = True, salt: Optional[str] = None
 ) -> str:
     """
     Compute SHA-infinity hash - recursive hashing for chain verification.
@@ -59,20 +56,16 @@ def sha_infinity_hash(
         Final hash string with metadata prefix
     """
     if isinstance(content, dict) or isinstance(content, list):
-        content = json.dumps(content, sort_keys=True, separators=(',', ':'))
+        content = json.dumps(content, sort_keys=True, separators=(",", ":"))
 
     if isinstance(content, str):
-        content = content.encode('utf-8')
+        content = content.encode("utf-8")
 
     # Initial hash
     current_hash = hashlib.sha256(content).hexdigest()
 
     # Build hash chain
-    chain_data = {
-        'initial': current_hash,
-        'depth': depth,
-        'chain': [current_hash]
-    }
+    chain_data = {"initial": current_hash, "depth": depth, "chain": [current_hash]}
 
     for i in range(depth):
         # Combine previous hash with depth and optional elements
@@ -85,7 +78,7 @@ def sha_infinity_hash(
             combo += f":salt={salt}"
 
         current_hash = hashlib.sha256(combo.encode()).hexdigest()
-        chain_data['chain'].append(current_hash)
+        chain_data["chain"].append(current_hash)
 
     # Create final infinity hash with metadata
     final = f"sha∞:{depth}:{current_hash}"
@@ -103,6 +96,7 @@ class HashChain:
     - Sync verification between services
     - Audit trail maintenance
     """
+
     chain_id: str
     hashes: List[str] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
@@ -148,10 +142,10 @@ class ContentVerifier:
     def compute_all_hashes(content: Any) -> Dict[str, str]:
         """Compute all hash types for content."""
         return {
-            'sha256': sha256_hash(content),
-            'sha_infinity_3': sha_infinity_hash(content, depth=3),
-            'sha_infinity_7': sha_infinity_hash(content, depth=7),
-            'sha_infinity_21': sha_infinity_hash(content, depth=21),
+            "sha256": sha256_hash(content),
+            "sha_infinity_3": sha_infinity_hash(content, depth=3),
+            "sha_infinity_7": sha_infinity_hash(content, depth=7),
+            "sha_infinity_21": sha_infinity_hash(content, depth=21),
         }
 
     @staticmethod
@@ -165,10 +159,10 @@ class ContentVerifier:
         Verify content matches expected SHA-infinity hash.
         Extracts depth from hash prefix.
         """
-        if not expected_hash.startswith('sha∞:'):
+        if not expected_hash.startswith("sha∞:"):
             return False
 
-        parts = expected_hash.split(':')
+        parts = expected_hash.split(":")
         if len(parts) != 3:
             return False
 
@@ -176,7 +170,7 @@ class ContentVerifier:
         actual = sha_infinity_hash(content, depth=depth, include_timestamp=False)
 
         # Compare the hash portion (timestamps would differ)
-        return actual.split(':')[2] == parts[2]
+        return actual.split(":")[2] == parts[2]
 
 
 class StateHasher:
@@ -217,11 +211,11 @@ class StateHasher:
         unique_hashes = set(self.state_hashes.values())
 
         return {
-            'services': list(self.state_hashes.keys()),
-            'in_sync': len(unique_hashes) == 1,
-            'unique_states': len(unique_hashes),
-            'global_hash': self.get_global_hash(),
-            'hashes': self.state_hashes
+            "services": list(self.state_hashes.keys()),
+            "in_sync": len(unique_hashes) == 1,
+            "unique_states": len(unique_hashes),
+            "global_hash": self.get_global_hash(),
+            "hashes": self.state_hashes,
         }
 
 
@@ -246,11 +240,11 @@ def create_integrity_proof(content: Any) -> Dict:
     timestamp = int(time.time() * 1000)
 
     return {
-        'timestamp': timestamp,
-        'sha256': sha256_hash(content),
-        'sha_infinity': sha_infinity_hash(content, include_timestamp=False),
-        'content_type': type(content).__name__,
-        'proof_version': '1.0'
+        "timestamp": timestamp,
+        "sha256": sha256_hash(content),
+        "sha_infinity": sha_infinity_hash(content, include_timestamp=False),
+        "content_type": type(content).__name__,
+        "proof_version": "1.0",
     }
 
 
@@ -261,9 +255,7 @@ def verify_integrity_proof(content: Any, proof: Dict) -> Dict[str, bool]:
     Returns verification results for each hash type.
     """
     return {
-        'sha256_valid': sha256_hash(content) == proof.get('sha256'),
-        'sha_infinity_valid': ContentVerifier.verify_sha_infinity(
-            content, proof.get('sha_infinity', '')
-        ),
-        'proof_version': proof.get('proof_version') == '1.0'
+        "sha256_valid": sha256_hash(content) == proof.get("sha256"),
+        "sha_infinity_valid": ContentVerifier.verify_sha_infinity(content, proof.get("sha_infinity", "")),
+        "proof_version": proof.get("proof_version") == "1.0",
     }
