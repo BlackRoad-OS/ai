@@ -169,4 +169,4 @@ flake8 .
 
 ## License
 
-MIT License - BlackRoad Systems
+BlackRoad Proprietary License - BlackRoad Systems
